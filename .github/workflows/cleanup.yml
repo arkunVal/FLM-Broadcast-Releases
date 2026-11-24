@@ -1,0 +1,27 @@
+name: Alte Artefakte löschen
+on:
+  workflow_dispatch: # Ermöglicht das manuelle Starten per Button
+
+permissions:
+  actions: write # Erlaubt dem Workflow, Artefakte zu löschen
+
+jobs:
+  delete-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Alle Artefakte löschen
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const artifacts = await github.paginate(github.rest.actions.listArtifactsForRepo, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            for (const artifact of artifacts) {
+              await github.rest.actions.deleteArtifact({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                artifact_id: artifact.id,
+              });
+              console.log(`Gelöscht: ${artifact.name} (ID: ${artifact.id})`);
+            }
